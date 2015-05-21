@@ -19,21 +19,17 @@ angular.module('ng-currency', [])
             link: function (scope, element, attrs, ngModel) {
 
                 function decimalRex(dChar) {
-                    return RegExp("\\d|\\-|\\" + dChar, 'g');
+                    return RegExp("\\d|\\" + dChar, 'g');
                 }
 
                 function clearRex(dChar) {
-                    return RegExp("\\-{0,1}((\\" + dChar + ")|([0-9]{1,}\\" + dChar + "?))&?[0-9]{0,2}", 'g');
+                    return RegExp("((\\" + dChar + ")|([0-9]{1,}\\" + dChar + "?))&?[0-9]{0,2}", 'g');
                 }
 
                 function clearValue(value) {
                     value = String(value);
                     var dSeparator = $locale.NUMBER_FORMATS.DECIMAL_SEP;
                     var cleared = null;
-
-                    if(RegExp("^-[\\s]*$", 'g').test(value)) {
-                        value = "-0";
-                    }
 
                     if(decimalRex(dSeparator).test(value))
                     {
@@ -59,7 +55,13 @@ angular.module('ng-currency', [])
                 });
 
                 element.on("blur", function () {
-                    element.val($filter('currency')(ngModel.$modelValue, currencySymbol()));
+                    var roundedValue = Math.round(ngModel.$modelValue);
+                    if(roundedValue > 999999999) {
+                        roundedValue = 999999999;
+                    }
+                    ngModel.$setViewValue(roundedValue);
+                    element.val($filter('currency')(roundedValue, currencySymbol()));
+                    ngModel.$render();
                 });
 
                 ngModel.$formatters.unshift(function (value) {
